@@ -11,7 +11,7 @@ from database.database import async_session
 from database.models import User
 from keyboards.geoposition import create_geo_keyboard
 from keyboards.weather import create_inline_hour_weather_keyboard, create_inline_date_weather_keyboard
-from utils import make_associations_dict, format_day, format_hour
+from utils import make_associations_dict, format_partly, format_fully
 
 weather_router = Router()
 
@@ -49,7 +49,7 @@ async def date(callback: CallbackQuery):
     day_num = associations[date_or_day_num] - 1 if len(date_or_day_num) > 2 else int(date_or_day_num)
     day = loads(redis.get(user.location))[day_num]
     await callback.message.edit_text(
-        text=format_day(day),
+        text=format_partly(day),
         reply_markup=create_inline_hour_weather_keyboard(day_num)
     )
 
@@ -60,7 +60,7 @@ async def hour(callback: CallbackQuery):
     async with async_session() as session:
         user = await session.scalar(select(User).filter_by(id=callback.from_user.id))
     await callback.message.edit_text(
-        text=format_hour(loads(redis.get(user.location))[day_num]['hour'][int(callback.data.split(':')[1])]),
+        text=format_fully(loads(redis.get(user.location))[day_num]['hour'][int(callback.data.split(':')[1])]),
         reply_markup=create_inline_hour_weather_keyboard(day_num)
     )
 

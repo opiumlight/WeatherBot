@@ -28,13 +28,12 @@ def cache_weather(q: str, return_key: bool = False) -> str | None:
 
 async def cache_all_weather() -> None:
     async with async_session() as session:
-        result = (await session.execute(select(User.lat, User.lon))).fetchall()
-        coordinates = [f'{row.lat},{row.lon}' for row in result]
-    for q in coordinates:
+        locations = tuple((await session.scalars(select(User.location))).all())
+    for q in locations:
         cache_weather(q)
 
 
-def format_hour(hour: dict) -> str:
+def format_fully(hour: dict) -> str:
     return (
         f'<b>Время:</b> {hour["time"]}\n'
         f'<b>Температура:</b> {hour["temp_c"]}°C (ощущается как {hour["feelslike_c"]}°C) /'
@@ -52,8 +51,8 @@ def format_hour(hour: dict) -> str:
     )
 
 
-def format_day(day: dict) -> str:
-    day_info = (
+def format_partly(day: dict) -> str:
+    return (
         f'<b>Дата:</b> {day["date"]}\n'
         f'<b>Максимальная температура:</b> {day["day"]["maxtemp_c"]}°C / {day["day"]["maxtemp_f"]}°F\n'
         f'<b>Минимальная температура:</b> {day["day"]["mintemp_c"]}°C / {day["day"]["mintemp_f"]}°F\n'
@@ -63,15 +62,6 @@ def format_day(day: dict) -> str:
         f'<b>Состояние:</b> {condition[day["day"]["condition"]["code"]]}\n'
         f'<b>УФ-индекс:</b> {day["day"]["uv"]}\n'
     )
-
-    # hours_info = "⠀\n".join(format_hour(hour) for hour in day["hour"])
-    #
-    # return f'{day_info}\n{hours_info}'
-    return day_info
-
-
-def format_forecast(forecast: dict) -> str:
-    return "\n☬".join(format_day(day) for day in forecast["forecastday"])
 
 
 def extract_dates_from_forecastday(forecastday: list[dict]) -> list:
