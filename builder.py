@@ -1,11 +1,11 @@
 import logging
 import weatherapi
-import redis as rediska
+import redis
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from decouple import config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -13,7 +13,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 
-redis = rediska.Redis(decode_responses=True)
+r = redis.Redis(decode_responses=True)
 
 configuration = weatherapi.Configuration()
 configuration.api_key['key'] = config('API_KEY')
@@ -23,4 +23,4 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher(storage=MemoryStorage())
+dp = Dispatcher(storage=RedisStorage.from_url('redis://localhost:6379/0'))

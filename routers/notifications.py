@@ -22,7 +22,7 @@ async def turn_notifications(callback: CallbackQuery):
     async with async_session() as session:
         user = await session.scalar(select(User).filter_by(id=callback.from_user.id))
         if str(user.notifications) == callback.data:
-            await callback.answer(text='У вас уже данная настройка.', show_alert=True)
+            await callback.answer(text='У вас уже данная настройка.')
             return
         await session.execute(update(User).values(notifications=True if callback.data == 'True' else False))
         await session.commit()

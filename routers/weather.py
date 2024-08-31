@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery, ErrorEvent, ReplyKeyboardRemov
 from sqlalchemy import select
 import datetime
 
-from builder import redis
+from builder import r
 from database.database import async_session
 from database.models import User
 from keyboards.geoposition import create_geo_keyboard
@@ -22,8 +22,7 @@ async def weather(message: Message):
         location = await session.scalar(select(User.location).filter_by(id=message.from_user.id))
     if location:
         answer = 'Выберите, погоду на какой день вы хотите посмотреть.'
-        reply_markup = create_inline_date_weather_keyboard(loads(redis.get(location)))
-        await message.answer(text='Клавиатура убрана.', reply_markup=ReplyKeyboardRemove())
+        reply_markup = create_inline_date_weather_keyboard(loads(r.get(location)))
     else:
         answer = 'Вы не указали свою геопозицию.'
         reply_markup = create_geo_keyboard()
@@ -36,7 +35,7 @@ async def weather_callback(callback: CallbackQuery):
         location = await session.scalar(select(User.location).filter_by(id=callback.from_user.id))
     await callback.message.edit_text(
         'Выберите, погоду на какой день вы хотите посмотреть.',
-        reply_markup=create_inline_date_weather_keyboard(loads(redis.get(location)))
+        reply_markup=create_inline_date_weather_keyboard(loads(r.get(location)))
     )
 
 
@@ -47,7 +46,7 @@ async def date(callback: CallbackQuery):
         user = await session.scalar(select(User).filter_by(id=callback.from_user.id))
     date_or_day_num = callback.data.split(':')[1].lstrip()
     day_num = associations[date_or_day_num] - 1 if len(date_or_day_num) > 2 else int(date_or_day_num)
-    day = loads(redis.get(user.location))[day_num]
+    day = loads(r.get(user.location))[day_num]
     await callback.message.edit_text(
         text=format_partly(day),
         reply_markup=create_inline_hour_weather_keyboard(day_num)
@@ -60,7 +59,7 @@ async def hour(callback: CallbackQuery):
     async with async_session() as session:
         user = await session.scalar(select(User).filter_by(id=callback.from_user.id))
     await callback.message.edit_text(
-        text=format_fully(loads(redis.get(user.location))[day_num]['hour'][int(callback.data.split(':')[1])]),
+        text=format_fully(loads(r.get(user.location))[day_num]['hour'][int(callback.data.split(':')[1])]),
         reply_markup=create_inline_hour_weather_keyboard(day_num)
     )
 

@@ -6,7 +6,7 @@ from json import dumps
 from database.database import async_session
 from database.models import User
 from mappings import condition, WindDirections
-from builder import bot, weather_api, redis
+from builder import bot, weather_api, r
 
 
 async def set_commands() -> None:
@@ -16,14 +16,15 @@ async def set_commands() -> None:
             BotCommand(command='geo', description='Просмотр и изменение геопозиции'),
             BotCommand(command='notifications', description='Настройка уведомлений'),
             BotCommand(command='weather', description='Просмотреть погоду'),
+            BotCommand(command='remove_keyboard', description='Убрать клавиатуру'),
         ]
     )
 
 
-def cache_weather(q: str, return_key: bool = False) -> str | None:
+def cache_weather(q: str) -> str:
     information = weather_api.forecast_weather(q, days=14)
-    redis.set(information['location']['name'], dumps(information['forecast']['forecastday']), ex=86400)
-    return information['location']['name'] if return_key else None
+    r.set(information['location']['name'], dumps(information['forecast']['forecastday']), ex=86400)
+    return information['location']['name']
 
 
 async def cache_all_weather() -> None:

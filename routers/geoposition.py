@@ -36,7 +36,7 @@ async def delete_geo(message: Message):
 async def handle_location(message: Message):
     latitude = message.location.latitude
     longitude = message.location.longitude
-    key = cache_weather(f'{latitude},{longitude}', return_key=True)
+    key = cache_weather(f'{latitude},{longitude}')
     async with async_session() as session:
         try:
             await session.execute(
