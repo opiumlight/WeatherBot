@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, ReplyKeyboardRemove, FSInputFile
+from aiogram.types import Message, ReplyKeyboardRemove
 
 from database.database import async_session
 from database.models import User

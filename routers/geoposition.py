@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database.database import async_session
 from database.models import User
+from database.models import Notification
 from keyboards.geoposition import create_geo_keyboard
 from utils import cache_weather
 
@@ -25,6 +26,7 @@ async def geo(message: Message):
 async def delete_geo(message: Message):
     async with async_session() as session:
         await session.execute(delete(User).filter_by(id=message.from_user.id))
+        await session.execute(delete(Notification).filter_by(user_id=message.from_user.id))
         await session.commit()
     await message.answer(
         'Вы успешно удалили геопозицию. Уведомления о погоде более не будут приходить.',
@@ -47,6 +49,7 @@ async def handle_location(message: Message):
                     location=key
                 )
             )
+            await session.execute(insert(Notification).values(user_id=message.from_user.id, hour=0, minute=0))
         except IntegrityError:
             await session.rollback()
             await session.execute(

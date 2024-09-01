@@ -2,7 +2,7 @@ from json import loads
 
 from aiogram import Router, F
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import Message, CallbackQuery, ErrorEvent, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ErrorEvent
 from sqlalchemy import select
 import datetime
 
@@ -44,7 +44,7 @@ async def date(callback: CallbackQuery):
     associations = make_associations_dict(datetime.date.today())
     async with async_session() as session:
         user = await session.scalar(select(User).filter_by(id=callback.from_user.id))
-    date_or_day_num = callback.data.split(':')[1].lstrip()
+    date_or_day_num = callback.data.split(':')[1]
     day_num = associations[date_or_day_num] - 1 if len(date_or_day_num) > 2 else int(date_or_day_num)
     day = loads(r.get(user.location))[day_num]
     await callback.message.edit_text(
@@ -68,3 +68,4 @@ async def hour(callback: CallbackQuery):
 async def error_handler(event: ErrorEvent):
     if isinstance(event.exception, TelegramBadRequest):
         await event.update.callback_query.answer()
+    raise event.exception
